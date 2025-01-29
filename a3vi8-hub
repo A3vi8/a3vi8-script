@@ -1,0 +1,440 @@
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/MoneyMades1/here/refs/heads/main/x1'))()
+local Window = OrionLib:MakeWindow({Name = "༒A3vi8-Hub༒", HidePremium = false, SaveConfig = true, ConfigFolder = "TestConfig"})
+
+-- Tabs for UI
+local tabs = {
+    MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false}),
+    AimbotTab = Window:MakeTab({Name = "Aimbot", Icon = "rbxassetid://4483345998", PremiumOnly = false}),
+    GodModeTab = Window:MakeTab({Name = "God Mode", Icon = "rbxassetid://4483345998", PremiumOnly = false}),
+    GamesTab = Window:MakeTab({Name = "Games", Icon = "rbxassetid://4483345998", PremiumOnly = false}),
+        TrollTab = Window:MakeTab({Name = "Troll", Icon = "rbxassetid://4483345998", PremiumOnly = false}),  -- New Troll Tab
+    DestroyTab = Window:MakeTab({Name = "Destroy", Icon = "rbxassetid://4483345998", PremiumOnly = false}),
+}
+
+-- Fling Variables
+local flingEnabled = false
+local flingForce = 1000  -- Adjust the fling strength as needed
+
+-- Fling Functionality
+function flingPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetRootPart = targetPlayer.Character.HumanoidRootPart
+        local localPlayer = game.Players.LocalPlayer
+        local localRootPart = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        
+        if localRootPart then
+            -- Create a BodyVelocity to fling the player
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)  -- Ensure the force is enough to move the player
+            bodyVelocity.Velocity = (targetRootPart.Position - localRootPart.Position).unit * flingForce
+            bodyVelocity.Parent = targetRootPart
+
+            -- Remove the BodyVelocity after 0.5 seconds to stop the fling effect
+            game:GetService("Debris"):AddItem(bodyVelocity, 0.5)  -- Will remove the body velocity after 0.5 seconds
+        end
+    end
+end
+tabs.TrollTab:AddLabel("Not Working!")
+
+-- Fling Toggle Button in the Troll Tab
+tabs.TrollTab:AddButton({
+    Name = "Toggle Fling Effect",
+    Callback = function()
+        flingEnabled = not flingEnabled
+        print(flingEnabled and "Fling Enabled" or "Fling Disabled")
+        
+        -- Fling when player touches another player
+        local player = game.Players.LocalPlayer
+        local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            humanoidRootPart.Touched:Connect(function(hit)
+                local touchedPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
+                if touchedPlayer and touchedPlayer ~= player and flingEnabled then
+                    flingPlayer(touchedPlayer)
+                end
+            end)
+        end
+    end
+})
+-- Noclip Variables
+local noclipEnabled = false
+
+-- Function to enable Noclip
+function enableNoclip()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+        if humanoid and humanoidRootPart then
+            humanoid.PlatformStand = true  -- Disable humanoid's standing platform (enabling noclip)
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+
+            -- Disable collision with all parts in the character
+            for _, part in ipairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+
+            -- Smooth movement (keeping humanoidRootPart at a fixed velocity)
+            game:GetService("RunService").Heartbeat:Connect(function()
+                if noclipEnabled then
+                    -- Continuously update the HumanoidRootPart to avoid collisions
+                    humanoidRootPart.Velocity = Vector3.zero  -- Set velocity to zero to prevent bouncing or stopping
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame  -- Fixing position to avoid sliding/locking in place
+                end
+            end)
+        end
+    end
+end
+
+-- Function to disable Noclip
+function disableNoclip()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+        if humanoid and humanoidRootPart then
+            humanoid.PlatformStand = false  -- Enable humanoid's platform stand (disable noclip)
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+            -- Re-enable collision with all parts in the character
+            for _, part in ipairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
+-- Noclip Toggle Button
+tabs.TrollTab:AddButton({
+    Name = "Toggle Noclip",
+    Callback = function()
+        noclipEnabled = not noclipEnabled
+        print(noclipEnabled and "Noclip Enabled" or "Noclip Disabled")
+        
+        if noclipEnabled then
+            enableNoclip()  -- Enable noclip
+        else
+            disableNoclip()  -- Disable noclip
+        end
+    end
+})
+
+
+
+
+
+
+-- Aimbot Variables
+local aimbotEnabled, closestPlayer, fov, isAimingAtTarget = false, nil, 70, false
+local camera, playersService = game.Workspace.CurrentCamera, game:GetService("Players")
+
+-- Aimbot Toggle Button
+tabs.AimbotTab:AddButton({
+    Name = "Enable Aimbot (Right Click to Aim)",
+    Callback = function()
+        aimbotEnabled = not aimbotEnabled
+        print(aimbotEnabled and "Aimbot Enabled" or "Aimbot Disabled")
+        if aimbotEnabled then startAimbot() end
+    end
+})
+
+-- Aimbot Logic
+function startAimbot()
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if aimbotEnabled then
+            closestPlayer = getClosestPlayer()
+            if closestPlayer and closestPlayer.Character then
+                if isAimingAtTarget then aimAtTarget(closestPlayer.Character) end
+            end
+        end
+    end)
+end
+
+function getClosestPlayer()
+    local localPlayer = playersService.LocalPlayer
+    local closestDistance = math.huge
+    local closestPlayer = nil
+    local cameraPosition = camera.CFrame.Position
+
+    for _, player in pairs(playersService:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition = player.Character.HumanoidRootPart.Position
+            local distance = (targetPosition - cameraPosition).Magnitude
+            local screenPos = camera:WorldToScreenPoint(targetPosition)
+            local angle = math.deg(math.acos(camera.CFrame.LookVector:Dot((targetPosition - cameraPosition).unit)))
+
+            if angle < fov and distance < closestDistance then
+                closestDistance = distance
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
+
+function aimAtTarget(character)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        camera.CFrame = CFrame.new(camera.CFrame.Position, humanoidRootPart.Position)
+    end
+end
+
+-- God Mode Toggle
+local godModeEnabled = false
+tabs.GodModeTab:AddButton({
+    Name = "Enable God Mode",
+    Callback = function()
+        godModeEnabled = not godModeEnabled
+        print(godModeEnabled and "God Mode Enabled" or "God Mode Disabled")
+        if godModeEnabled then enableGodMode() else disableGodMode() end
+    end
+})
+
+function enableGodMode()
+    local player = game.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.Health = humanoid.MaxHealth
+        humanoid.HealthChanged:Connect(function()
+            humanoid.Health = humanoid.MaxHealth
+        end)
+    end
+end
+
+function disableGodMode()
+    local player = game.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.HealthChanged:Disconnect()
+    end
+end
+
+-- ESP Logic
+local espInstances = {}
+local maxDistance = 50
+tabs.MainTab:AddSlider({
+    Name = "ESP Max Distance",
+    Min = 0,
+    Max = 2000,
+    Default = 50,
+    Color = Color3.new(0, 1, 0.95),
+    Increment = 1,
+    ValueName = "meters",
+    Callback = function(Value)
+        maxDistance = Value
+        print("ESP Distance set to: " .. Value .. " meters")
+    end    
+})
+
+function startESP()
+    local localPlayer = playersService.LocalPlayer
+    for _, player in pairs(playersService:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            createESP(player)
+        end
+    end
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        for _, player in pairs(playersService:GetPlayers()) do
+            if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                updateESP(player)
+            end
+        end
+    end)
+end
+
+-- Variables for ESP color
+local espColor = Color3.fromRGB(0, 0, 255)
+
+-- Add a colorpicker to change ESP color
+tabs.MainTab:AddColorpicker({
+    Name = "ESP Color Picker",
+    Default = espColor,
+    Callback = function(Value)
+        espColor = Value
+        print("ESP color set to: " .. tostring(Value))
+    end
+})
+
+-- Modify the `createESP` function to use the selected color
+function createESP(player)
+    local character = player.Character
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+
+    if rootPart and humanoid then
+        local billboard = Instance.new("BillboardGui", rootPart)
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.Adornee = rootPart
+        billboard.AlwaysOnTop = true
+
+        local label = Instance.new("TextLabel", billboard)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = espColor  -- Use the selected ESP color
+        label.TextScaled = true
+        label.Text = player.Name
+
+        table.insert(espInstances, billboard)
+    end
+end
+
+-- Modify the `updateESP` function to ensure the ESP updates with the selected color
+function updateESP(player)
+    local character = player.Character
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+
+    for _, espInstance in pairs(espInstances) do
+        if espInstance.Adornee == rootPart then
+            local distance = (rootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+
+            if distance <= maxDistance then
+                local health = humanoid and humanoid.Health or 0
+                espInstance.TextLabel.Text = player.Name .. "\nDistance: " .. math.floor(distance) .. " | Health: " .. math.floor(health)
+                espInstance.TextLabel.TextColor3 = espColor  -- Ensure color is updated
+            else
+                espInstance.TextLabel.Text = ""
+            end
+        end
+    end
+end
+
+
+tabs.MainTab:AddButton({
+    Name = "Enable ESP (Show Distance & Health)",
+    Callback = function()
+        print("ESP Enabled")
+        startESP()
+    end
+})
+
+function disableESP()
+    for _, espInstance in pairs(espInstances) do
+        espInstance:Destroy()
+    end
+    espInstances = {}
+end
+
+tabs.MainTab:AddButton({
+    Name = "Disable ESP",
+    Callback = function()
+        print("ESP Disabled")
+        disableESP()
+    end
+})
+
+-- Speed Handler
+tabs.MainTab:AddButton({
+    Name = "Enable Speed (Shift to Run)",
+    Callback = function()
+        print("Speed Enabled")
+        enableSpeed()
+    end    
+})
+
+-- Fly Handler
+tabs.MainTab:AddButton({
+    Name = "Enable Fly",
+    Callback = function()
+        print("Fly Enabled")
+        enableFly()
+    end    
+})
+-- Add a new button to execute the external script in the "Games" tab
+tabs.GamesTab:AddButton({
+    Name = "Execute Script for AirFlow",
+    Callback = function()
+        print("Executing script for AirFlow...")
+        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/255ac567ced3dcb9e69aa7e44c423f19.lua"))()
+    end
+})
+
+
+-- Fly Deactivation Button
+tabs.MainTab:AddButton({
+    Name = "Disable Fly",
+    Callback = function()
+        print("Fly Disabled")
+        disableFly()
+    end    
+})
+
+-- Menu Destroy Button
+tabs.DestroyTab:AddButton({
+    Name = "Menu Destroy",
+    Callback = function()
+        print("Menu Destroyed")
+        OrionLib:Destroy()
+    end    
+})
+
+-- Speed Logic
+function enableSpeed()
+    local player = game.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    local userInput = game:GetService("UserInputService")
+    local runService = game:GetService("RunService")
+    local connection
+
+    connection = runService.RenderStepped:Connect(function()
+        if userInput:IsKeyDown(Enum.KeyCode.LeftShift) then
+            humanoid.WalkSpeed = 500
+        else
+            humanoid.WalkSpeed = 100
+        end
+    end)
+end
+
+-- Fly Logic
+local flyConnection
+
+function enableFly()
+    local player = game.Players.LocalPlayer
+    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    local flySpeed = 200
+    local userInput = game:GetService("UserInputService")
+    local flyDirection = Vector3.zero
+
+    flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        local moveDirection = Vector3.zero
+        if userInput:IsKeyDown(Enum.KeyCode.W) then moveDirection += Vector3.new(0, 0, -1) end
+        if userInput:IsKeyDown(Enum.KeyCode.S) then moveDirection += Vector3.new(0, 0, 1) end
+        if userInput:IsKeyDown(Enum.KeyCode.A) then moveDirection += Vector3.new(-1, 0, 0) end
+        if userInput:IsKeyDown(Enum.KeyCode.D) then moveDirection += Vector3.new(1, 0, 0) end
+        if userInput:IsKeyDown(Enum.KeyCode.Space) then moveDirection += Vector3.new(0, 1, 0) end
+        if userInput:IsKeyDown(Enum.KeyCode.LeftControl) then moveDirection += Vector3.new(0, -1, 0) end
+
+        flyDirection = moveDirection.Magnitude > 0 and moveDirection.Unit * flySpeed or Vector3.zero
+        humanoidRootPart.Velocity = flyDirection
+    end)
+end
+
+function disableFly()
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+
+    local player = game.Players.LocalPlayer
+    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        humanoidRootPart.Velocity = Vector3.zero
+    end
+end
+
+OrionLib:Init()
