@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/MoneyMades1/here/refs/heads/main/x1'))()
-local Window = OrionLib:MakeWindow({Name = "༒A3vi8-Hub༒", HidePremium = false, SaveConfig = true, ConfigFolder = "TestConfig"})
+local Window = OrionLib:MakeWindow({Name = "A3vi8-Hub", HidePremium = false, IntroText = "A3vi8-Hub", SaveConfig = true, ConfigFolder = "TestConfig"})
 
 -- Tabs for UI
 local tabs = {
