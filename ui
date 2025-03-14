@@ -4,12 +4,14 @@ VioletCheatUI.__index = VioletCheatUI
 
 -- Design-Einstellungen
 local Theme = {
-    Background = Color3.fromRGB(25, 25, 25),
+    Background = Color3.fromRGB(30, 30, 30),
     TitleBar = Color3.fromRGB(40, 40, 40),
     TabButton = Color3.fromRGB(50, 50, 50),
-    TabContent = Color3.fromRGB(30, 30, 30),
+    TabContent = Color3.fromRGB(35, 35, 35),
     Button = Color3.fromRGB(60, 60, 60),
+    ButtonHover = Color3.fromRGB(70, 70, 70),
     Text = Color3.fromRGB(255, 255, 255),
+    TextHover = Color3.fromRGB(200, 200, 200),
 }
 
 -- Erstellt ein neues Fenster
@@ -18,14 +20,15 @@ function VioletCheatUI:CreateWindow(name)
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
     local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.Size = UDim2.new(0, 350, 0, 450)
+    MainFrame.Position = UDim2.new(0.5, -175, 0.5, -225)
     MainFrame.BackgroundColor3 = Theme.Background
     MainFrame.BorderSizePixel = 0
+    MainFrame.ClipsDescendants = true
     MainFrame.Parent = ScreenGui
 
     local TitleBar = Instance.new("Frame")
-    TitleBar.Size = UDim2.new(1, 0, 0, 30)
+    TitleBar.Size = UDim2.new(1, 0, 0, 40)
     TitleBar.BackgroundColor3 = Theme.TitleBar
     TitleBar.BorderSizePixel = 0
     TitleBar.Parent = MainFrame
@@ -35,7 +38,7 @@ function VioletCheatUI:CreateWindow(name)
     Title.Size = UDim2.new(1, 0, 1, 0)
     Title.BackgroundTransparency = 1
     Title.TextColor3 = Theme.Text
-    Title.Font = Enum.Font.SourceSansBold
+    Title.Font = Enum.Font.GothamBold
     Title.TextSize = 18
     Title.Parent = TitleBar
 
@@ -73,20 +76,20 @@ function VioletCheatUI:CreateWindow(name)
     local TabButtons = {}
     local TabFrames = {}
 
-    function VioletCheatUI:CreateTab(name, position)
+    function VioletCheatUI:CreateTab(name)
         local TabButton = Instance.new("TextButton")
         TabButton.Text = name
-        TabButton.Size = UDim2.new(0.3, 0, 0, 30)
-        TabButton.Position = position
+        TabButton.Size = UDim2.new(0.3, 0, 0, 35)
+        TabButton.Position = UDim2.new(0.3 * (#TabButtons), 0, 0, 40)
         TabButton.BackgroundColor3 = Theme.TabButton
         TabButton.TextColor3 = Theme.Text
-        TabButton.Font = Enum.Font.SourceSansBold
+        TabButton.Font = Enum.Font.Gotham
         TabButton.TextSize = 14
         TabButton.Parent = MainFrame
 
         local TabFrame = Instance.new("Frame")
-        TabFrame.Size = UDim2.new(1, 0, 1, -60)
-        TabFrame.Position = UDim2.new(0, 0, 0, 60)
+        TabFrame.Size = UDim2.new(1, 0, 1, -75)
+        TabFrame.Position = UDim2.new(0, 0, 0, 75)
         TabFrame.BackgroundColor3 = Theme.TabContent
         TabFrame.Visible = false
         TabFrame.Parent = MainFrame
@@ -120,11 +123,25 @@ end
 function VioletCheatUI:CreateButton(parent, text, callback)
     local Button = Instance.new("TextButton")
     Button.Text = text
-    Button.Size = UDim2.new(0.9, 0, 0, 30)
+    Button.Size = UDim2.new(0.9, 0, 0, 35)
     Button.Position = UDim2.new(0.05, 0, 0, 0)
     Button.BackgroundColor3 = Theme.Button
     Button.TextColor3 = Theme.Text
+    Button.Font = Enum.Font.Gotham
+    Button.TextSize = 14
     Button.Parent = parent
+
+    -- Hover-Effekt
+    Button.MouseEnter:Connect(function()
+        Button.BackgroundColor3 = Theme.ButtonHover
+        Button.TextColor3 = Theme.TextHover
+    end)
+
+    Button.MouseLeave:Connect(function()
+        Button.BackgroundColor3 = Theme.Button
+        Button.TextColor3 = Theme.Text
+    end)
+
     Button.MouseButton1Click:Connect(callback)
     return Button
 end
@@ -132,7 +149,7 @@ end
 -- Erstellt einen Slider
 function VioletCheatUI:CreateSlider(parent, text, min, max, default, callback)
     local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(0.9, 0, 0, 50)
+    SliderFrame.Size = UDim2.new(0.9, 0, 0, 60)
     SliderFrame.Position = UDim2.new(0.05, 0, 0, 0)
     SliderFrame.BackgroundTransparency = 1
     SliderFrame.Parent = parent
@@ -142,14 +159,18 @@ function VioletCheatUI:CreateSlider(parent, text, min, max, default, callback)
     SliderLabel.Size = UDim2.new(1, 0, 0, 20)
     SliderLabel.BackgroundTransparency = 1
     SliderLabel.TextColor3 = Theme.Text
+    SliderLabel.Font = Enum.Font.Gotham
+    SliderLabel.TextSize = 14
     SliderLabel.Parent = SliderFrame
 
     local Slider = Instance.new("TextBox")
     Slider.PlaceholderText = "Enter value"
     Slider.Size = UDim2.new(1, 0, 0, 30)
-    Slider.Position = UDim2.new(0, 0, 0, 20)
+    Slider.Position = UDim2.new(0, 0, 0, 25)
     Slider.BackgroundColor3 = Theme.Button
     Slider.TextColor3 = Theme.Text
+    Slider.Font = Enum.Font.Gotham
+    Slider.TextSize = 14
     Slider.Parent = SliderFrame
 
     Slider.FocusLost:Connect(function()
