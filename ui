@@ -1,8 +1,8 @@
--- VioletUI Library
-local VioletUI = {}
-VioletUI.__index = VioletUI
+-- VioletCheatUI Library
+local VioletCheatUI = {}
+VioletCheatUI.__index = VioletCheatUI
 
--- Farben und Design
+-- Design-Einstellungen
 local Theme = {
     Background = Color3.fromRGB(25, 25, 25),
     TitleBar = Color3.fromRGB(40, 40, 40),
@@ -13,7 +13,7 @@ local Theme = {
 }
 
 -- Erstellt ein neues Fenster
-function VioletUI:CreateWindow(name)
+function VioletCheatUI:CreateWindow(name)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
@@ -73,7 +73,7 @@ function VioletUI:CreateWindow(name)
     local TabButtons = {}
     local TabFrames = {}
 
-    function VioletUI:CreateTab(name, position)
+    function VioletCheatUI:CreateTab(name, position)
         local TabButton = Instance.new("TextButton")
         TabButton.Text = name
         TabButton.Size = UDim2.new(0.3, 0, 0, 30)
@@ -113,11 +113,11 @@ function VioletUI:CreateWindow(name)
         ScreenGui = ScreenGui,
         MainFrame = MainFrame,
         Tabs = TabFrames,
-    }, VioletUI)
+    }, VioletCheatUI)
 end
 
 -- Erstellt einen Button
-function VioletUI:CreateButton(parent, text, callback)
+function VioletCheatUI:CreateButton(parent, text, callback)
     local Button = Instance.new("TextButton")
     Button.Text = text
     Button.Size = UDim2.new(0.9, 0, 0, 30)
@@ -130,7 +130,7 @@ function VioletUI:CreateButton(parent, text, callback)
 end
 
 -- Erstellt einen Slider
-function VioletUI:CreateSlider(parent, text, min, max, default, callback)
+function VioletCheatUI:CreateSlider(parent, text, min, max, default, callback)
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Size = UDim2.new(0.9, 0, 0, 50)
     SliderFrame.Position = UDim2.new(0.05, 0, 0, 0)
@@ -165,4 +165,4 @@ function VioletUI:CreateSlider(parent, text, min, max, default, callback)
     return SliderFrame
 end
 
-return VioletUI
+return VioletCheatUI
