@@ -1,0 +1,168 @@
+-- VioletUI Library
+local VioletUI = {}
+VioletUI.__index = VioletUI
+
+-- Farben und Design
+local Theme = {
+    Background = Color3.fromRGB(25, 25, 25),
+    TitleBar = Color3.fromRGB(40, 40, 40),
+    TabButton = Color3.fromRGB(50, 50, 50),
+    TabContent = Color3.fromRGB(30, 30, 30),
+    Button = Color3.fromRGB(60, 60, 60),
+    Text = Color3.fromRGB(255, 255, 255),
+}
+
+-- Erstellt ein neues Fenster
+function VioletUI:CreateWindow(name)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.BackgroundColor3 = Theme.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+
+    local TitleBar = Instance.new("Frame")
+    TitleBar.Size = UDim2.new(1, 0, 0, 30)
+    TitleBar.BackgroundColor3 = Theme.TitleBar
+    TitleBar.BorderSizePixel = 0
+    TitleBar.Parent = MainFrame
+
+    local Title = Instance.new("TextLabel")
+    Title.Text = name
+    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Theme.Text
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 18
+    Title.Parent = TitleBar
+
+    -- Drag-and-Drop Funktion
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    TitleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Tabs
+    local TabButtons = {}
+    local TabFrames = {}
+
+    function VioletUI:CreateTab(name, position)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Text = name
+        TabButton.Size = UDim2.new(0.3, 0, 0, 30)
+        TabButton.Position = position
+        TabButton.BackgroundColor3 = Theme.TabButton
+        TabButton.TextColor3 = Theme.Text
+        TabButton.Font = Enum.Font.SourceSansBold
+        TabButton.TextSize = 14
+        TabButton.Parent = MainFrame
+
+        local TabFrame = Instance.new("Frame")
+        TabFrame.Size = UDim2.new(1, 0, 1, -60)
+        TabFrame.Position = UDim2.new(0, 0, 0, 60)
+        TabFrame.BackgroundColor3 = Theme.TabContent
+        TabFrame.Visible = false
+        TabFrame.Parent = MainFrame
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, frame in pairs(TabFrames) do
+                frame.Visible = false
+            end
+            TabFrame.Visible = true
+        end)
+
+        table.insert(TabButtons, TabButton)
+        table.insert(TabFrames, TabFrame)
+
+        return TabFrame
+    end
+
+    -- Standard-Tab öffnen
+    if #TabFrames > 0 then
+        TabFrames[1].Visible = true
+    end
+
+    return setmetatable({
+        ScreenGui = ScreenGui,
+        MainFrame = MainFrame,
+        Tabs = TabFrames,
+    }, VioletUI)
+end
+
+-- Erstellt einen Button
+function VioletUI:CreateButton(parent, text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Text = text
+    Button.Size = UDim2.new(0.9, 0, 0, 30)
+    Button.Position = UDim2.new(0.05, 0, 0, 0)
+    Button.BackgroundColor3 = Theme.Button
+    Button.TextColor3 = Theme.Text
+    Button.Parent = parent
+    Button.MouseButton1Click:Connect(callback)
+    return Button
+end
+
+-- Erstellt einen Slider
+function VioletUI:CreateSlider(parent, text, min, max, default, callback)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(0.9, 0, 0, 50)
+    SliderFrame.Position = UDim2.new(0.05, 0, 0, 0)
+    SliderFrame.BackgroundTransparency = 1
+    SliderFrame.Parent = parent
+
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Text = text .. ": " .. default
+    SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.TextColor3 = Theme.Text
+    SliderLabel.Parent = SliderFrame
+
+    local Slider = Instance.new("TextBox")
+    Slider.PlaceholderText = "Enter value"
+    Slider.Size = UDim2.new(1, 0, 0, 30)
+    Slider.Position = UDim2.new(0, 0, 0, 20)
+    Slider.BackgroundColor3 = Theme.Button
+    Slider.TextColor3 = Theme.Text
+    Slider.Parent = SliderFrame
+
+    Slider.FocusLost:Connect(function()
+        local value = tonumber(Slider.Text)
+        if value and value >= min and value <= max then
+            SliderLabel.Text = text .. ": " .. value
+            callback(value)
+        else
+            Slider.Text = ""
+        end
+    end)
+
+    return SliderFrame
+end
+
+return VioletUI
