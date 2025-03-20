@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 50px;
-      background-color: #fafafa;
+      background-color: #f0f0f0;
     }
     input[type="text"] {
       width: 60%;
@@ -26,24 +26,45 @@
     #status {
       margin-top: 20px;
     }
+    a {
+      display: block;
+      margin-top: 15px;
+      color: green;
+    }
   </style>
 </head>
 <body>
   <h1>Instagram Reel Downloader</h1>
-  <input type="text" id="reelUrl" placeholder="Paste Instagram Reel URL here">
+  <input type="text" id="reelUrl" placeholder="Paste Instagram Reel URL">
   <br>
   <button onclick="downloadReel()">Download</button>
   <div id="status"></div>
 
   <script>
-    function downloadReel() {
+    async function downloadReel() {
       const url = document.getElementById('reelUrl').value;
+      document.getElementById('status').innerText = "Processing...";
+
       if (!url.includes('instagram.com/reel/')) {
         document.getElementById('status').innerText = "Please enter a valid Instagram Reel URL!";
         return;
       }
-      // Dummy response (no real download)
-      document.getElementById('status').innerText = "Pretending to download... (Real downloading requires server-side processing)";
+
+      try {
+        // Beispiel-API (Dummy, du musst eine echte API mit deinem API-Key nutzen!)
+        const response = await fetch(`https://some-reel-downloader-api.com/api?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.download_url) {
+          document.getElementById('status').innerHTML = `
+            <a href="${data.download_url}" target="_blank">Click here to download Reel</a>
+          `;
+        } else {
+          document.getElementById('status').innerText = "Failed to fetch download link!";
+        }
+      } catch (err) {
+        document.getElementById('status').innerText = "Error: " + err.message;
+      }
     }
   </script>
 </body>
