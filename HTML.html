@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Reel Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #fafafa;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 10px;
+      margin: 20px 0;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #3897f0;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Instagram Reel Downloader</h1>
+  <input type="text" id="reelUrl" placeholder="Paste Instagram Reel URL here">
+  <br>
+  <button onclick="downloadReel()">Download</button>
+  <div id="status"></div>
+
+  <script>
+    function downloadReel() {
+      const url = document.getElementById('reelUrl').value;
+      if (!url.includes('instagram.com/reel/')) {
+        document.getElementById('status').innerText = "Please enter a valid Instagram Reel URL!";
+        return;
+      }
+      // Dummy response (no real download)
+      document.getElementById('status').innerText = "Pretending to download... (Real downloading requires server-side processing)";
+    }
+  </script>
+</body>
+</html>
